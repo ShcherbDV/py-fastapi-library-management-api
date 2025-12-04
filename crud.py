@@ -5,8 +5,8 @@ import schemas
 from models import Author, Book
 
 
-def get_all_authors(db: Session):
-    return db.scalars(select(Author)).all()
+def get_all_authors(db: Session, skip: int = 0, limit: int = 10):
+    return db.scalars(select(Author).offset(skip).limit(limit)).all()
 
 
 def create_author(db: Session, author: schemas.AuthorCreate):
@@ -21,8 +21,8 @@ def get_author_by_id(db: Session, author_id: int):
     return db.scalar(select(Author).where(Author.id == author_id))
 
 
-def get_all_books(db: Session):
-    return db.scalars(select(Book)).all()
+def get_all_books(db: Session, skip: int = 0, limit: int = 10):
+    return db.scalars(select(Book).offset(skip).limit(limit)).all()
 
 
 def create_book(db: Session, book: schemas.BookCreate):
