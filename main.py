@@ -5,10 +5,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 import crud
+import models
 import schemas
-from database import SessionLocal
+from database import SessionLocal, engine
 from models import Author
 
+models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 
@@ -45,7 +47,10 @@ async def create_author(
 
 @app.get("/authors/{author_id}/", response_model=schemas.Author)
 async def get_author(author_id: int, db: Annotated[Session, Depends(get_db)]):
-    return crud.get_author_by_id(db, author_id)
+    author = crud.get_author_by_id(db, author_id)
+    if author is None:
+        raise HTTPException(status_code=404, detail="No author with such id is found")
+    return author
 
 
 @app.get("/books/", response_model=list[schemas.Book])
@@ -68,12 +73,10 @@ async def create_book(
     return crud.create_book(db, book)
 
 
-@app.get("authors/{author_id}/books/", response_model=list[schemas.Book])
+@app.get("/authors/{author_id}/books/", response_model=list[schemas.Book])
 def get_books_by_author(author_id: int, db: Annotated[Session, Depends(get_db)]):
     if crud.get_author_by_id(db, author_id) is None:
         raise HTTPException(status_code=404, detail="No author with such id")
-    books = crud.get_books_by_author_id(db, author_id)
-    if not books:
-        raise HTTPException(status_code=404, detail="No books found for this author")
 
+    books = crud.get_books_by_author_id(db, author_id)
     return books
